@@ -32,3 +32,31 @@
       register: pubsub1_out
       debug:
         var: pubsub1_out
+    - name: create public subnet 2 in zone 2
+      ec2_vpc_subnet:
+        name: "{{ vpc_name }}-pubsub2"
+        region: "{{ region }}"
+        vpc_id: "{{ vpcout.vpc.id }}"
+        cidr: "{{ PubSub2Cidr }}"
+        zone: "{{ zone2 }}"
+        map_public: yes
+        resource_tags:
+          Name: "{{ vpc_name }}-pubsub2"
+        state: "{{ state }}"
+      register: pubsub2_out
+      debug:
+        var: pubsub2_out
+    - name: create public subnet 3 in zone 3
+      ec2_vpc_subnet:
+        name: "{{ vpc_name }}-pubsub3"
+        region: "{{ region }}"
+        vpc_id: "{{ vpcout.vpc.id }}"
+        cidr: "{{ PubSub3Cidr }}"
+        zone: "{{ zone2 }}"
+        map_public: yes
+        resource_tags:
+          Name: "{{ vpc_name }}-pubsub3"
+        state: "{{ state }}"
+      register: pubsub3_out
+      debug:
+        var: pubsub3_out
