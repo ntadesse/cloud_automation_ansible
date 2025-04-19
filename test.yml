@@ -1,0 +1,20 @@
+hosts: localhost
+connection: local
+gather_facts: false
+tasks:
+  - name: sample ec2 key
+    ec2_key:
+      name: sample-key
+      region: us-east-1
+    register: ec2_key_out
+
+  - debug:
+      var: ec2_key_out
+  - name: store login key
+    copy:
+      content: "{{ ec2_key_out.key.private_key }}"
+      dest: sample-key.pem
+      mode: 0600
+  - when: ec2_key_out.key.public_key is defined #ec2_key_out.changed == true
+    debug:
+      msg: "Public key is available"
