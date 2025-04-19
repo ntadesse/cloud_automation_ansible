@@ -14,4 +14,21 @@
         dns_hostnames: yes
         tenancy: default
         state: "{{ state }}"
-      register: vpc
+      register: vpcout
+      debug:
+        var: vpcout
+
+    - name: create public subnet 1 in zone 1
+      ec2_vpc_subnet:
+        name: "{{ vpc_name }}-pubsub1"
+        region: "{{ region }}"
+        vpc_id: "{{ vpcout.vpc.id }}"
+        cidr: "{{ PubSub1Cidr }}"
+        zone: "{{ zone1 }}"
+        map_public: yes
+        resource_tags:
+          Name: "{{ vpc_name }}-pubsub1"
+        state: "{{ state }}"
+      register: pubsub1_out
+      debug:
+        var: pubsub1_out
