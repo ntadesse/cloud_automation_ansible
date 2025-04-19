@@ -60,3 +60,46 @@
       register: pubsub3_out
       debug:
         var: pubsub3_out
+    - name: create private subnet 1 in zone 1
+      ec2_vpc_subnet:
+        name: "{{ vpc_name }}-privsub1"
+        region: "{{ region }}"
+        vpc_id: "{{ vpcout.vpc.id }}"
+        cidr: "{{ PrivSub1Cidr }}"
+        zone: "{{ zone1 }}"
+        map_public: no
+        resource_tags:
+          Name: "{{ vpc_name }}-privsub1"
+        state: "{{ state }}"
+      register: privsub1_out
+      debug:
+        var: privsub1_out
+    - name: create private subnet 2 in zone 2
+      ec2_vpc_subnet:
+        name: "{{ vpc_name }}-privsub2"
+        region: "{{ region }}"
+        vpc_id: "{{ vpcout.vpc.id }}"
+        cidr: "{{ PrivSub2Cidr }}"
+        zone: "{{ zone2 }}"
+        map_public: no
+        resource_tags:
+          Name: "{{ vpc_name }}-privsub2"
+        state: "{{ state }}"
+      register: privsub2_out
+      debug:
+        var: privsub2_out
+    - name: create private subnet 3 in zone 3
+      ec2_vpc_subnet:
+        name: "{{ vpc_name }}-privsub3"
+        region: "{{ region }}"
+        vpc_id: "{{ vpcout.vpc.id }}"
+        cidr: "{{ PrivSub3Cidr }}"
+        zone: "{{ zone3 }}"
+        map_public: no
+        resource_tags:
+          Name: "{{ vpc_name }}-privsub3"
+        state: "{{ state }}"
+      register: privsub3_out
+      debug:
+        var: privsub3_out
+    
