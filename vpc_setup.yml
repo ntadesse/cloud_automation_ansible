@@ -102,4 +102,13 @@
       register: privsub3_out
       debug:
         var: privsub3_out
-    
+    - name: create internet gateway
+      ec2_vpc_igw:
+        region: "{{ region }}"
+        vpc_id: "{{ vpcout.vpc.id }}"
+        state: present
+        resource_tags:
+          Name: "{{ vpc_name }}-igw"
+      register: igw_out
+      debug:
+        var: igw_out
