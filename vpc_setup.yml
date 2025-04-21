@@ -112,3 +112,53 @@
       register: igw_out
       debug:
         var: igw_out
+    - name: set up public route table
+      ec2_vpc_route_table:
+        region: "{{ region }}"
+        vpc_id: "{{ vpcout.vpc.id }}"
+        name: "{{ vpc_name }}-pubRT"
+        zone: "{{ zone1 }}"
+        state: present
+        subnets: 
+          - "{{ pubsub1_out.subnet.id }}"
+          - "{{ pubsub2_out.subnet.id }}"
+          - "{{ pubsub3_out.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw_out.gateway_id }}"
+        resource_tags:
+          Name: "{{ vpc_name }}-pubRT"
+      register: pubRT_out
+      debug:
+        var: pubRT_out
+    - name: create NAT gateway and elastic IP
+      ec2_vpc_nat_gateway:
+        region: "{{ region }}"
+        subnet_id: "{{ pubsub1_out.subnet.id }}"
+        wait: yes
+        state: present
+        if_exist_do_not_create: true
+        resource_tags:
+          Name: "{{ vpc_name }}-natgw"
+      register: natgw_out
+      debug:
+        var: natgw_out
+    - name: create private route table
+      ec2_vpc_route_table:
+        region: "{{ region }}"
+        vpc_id: "{{ vpcout.vpc.id }}"
+        name: "{{ vpc_name }}-privRT"
+        zone: "{{ zone1 }}"
+        state: present
+        subnets:
+          - "{{ privsub1_out.subnet.id }}"
+          - "{{ privsub2_out.subnet.id }}"
+          - "{{ privsub3_out.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            nat_gateway_id: "{{ natgw_out.nat_gateway_id }}"
+        resource_tags:
+          Name: "{{ vpc_name }}-privRT"
+      register: privRT_out
+      debug:
+        var: privRT_out
