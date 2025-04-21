@@ -176,3 +176,31 @@
         - natgw_out.nat_gateway_id
         - pubRT_out.route_table_id
         - privRT_out.route_table_id
+    - set_fact:
+        vpc_id: "{{ vpcout.vpc.id }}"
+        pubsub1_id: "{{ pubsub1_out.subnet.id }}"
+        pubsub2_id: "{{ pubsub2_out.subnet.id }}"
+        pubsub3_id: "{{ pubsub3_out.subnet.id }}"
+        privsub1_id: "{{ privsub1_out.subnet.id }}"
+        privsub2_id: "{{ privsub2_out.subnet.id }}"
+        privsub3_id: "{{ privsub3_out.subnet.id }}"
+        igw_id: "{{ igw_out.gateway_id }}"
+        natgw_id: "{{ natgw_out.nat_gateway_id }}"
+        pubRT_id: "{{ pubRT_out.route_table_id }}"
+        privRT_id: "{{ privRT_out.route_table_id }}"
+        cacheable: true
+    - name: save VPC variables to file
+      copy:
+        content: |
+          vpc_id: "{{ vpc_id }}"
+          pubsub1_id: "{{ pubsub1_id }}"
+          pubsub2_id: "{{ pubsub2_id }}"
+          pubsub3_id: "{{ pubsub3_id }}"
+          privsub1_id: "{{ privsub1_id }}"
+          privsub2_id: "{{ privsub2_id }}"
+          privsub3_id: "{{ privsub3_id }}"
+          igw_id: "{{ igw_id }}"
+          natgw_id: "{{ natgw_id }}"
+          pubRT_id: "{{ pubRT_id }}"
+          privRT_id: "{{ privRT_id }}"
+        dest: vars/vpc_vars.yml
