@@ -203,4 +203,4 @@
           natgw_id: "{{ natgw_id }}"
           pubRT_id: "{{ pubRT_id }}"
           privRT_id: "{{ privRT_id }}"
-        dest: vars/vpc_vars.yml
+        dest: vars/vpc_output_vars

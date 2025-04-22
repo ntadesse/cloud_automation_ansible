@@ -1,3 +1,5 @@
 bastion_ami: 
 region: us-east-2
 MYIP: 196.188.171.241/32
+key_name: bastion_host_key
+instance_type: t2.micro
