@@ -1,3 +1,4 @@
+region: "us-east-2"
 vpc_id: "{{ vpc_id }}"
 pubsub1_id: "{{ pubsub1_id }}"
 pubsub2_id: "{{ pubsub2_id }}"
