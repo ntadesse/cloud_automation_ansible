@@ -56,3 +56,10 @@
            Project: Vprofile
            Owner: DevOps-Team
       register: bastion_out
+    - name: Insert/Update "bastion_sg_id" in vars/vpc_output_vars
+      blockline:
+        path: vars/vpc_output_vars
+        backup: yes
+        block: |
+          bastion_sg_id: "{{ bastion_sg_out.group_id }}"
+      when: bastion_sg_out.changed

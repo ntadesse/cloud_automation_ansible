@@ -1,3 +1,4 @@
 ---
 - import_playbook: vpc_etup.yml
 - import_playbook: bastion.yml
+- import_playbook: vprofile-ec2-stack.yml
