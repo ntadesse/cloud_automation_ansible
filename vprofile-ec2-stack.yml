@@ -21,4 +21,78 @@
         mode: 0600
       when: vprokey_out.changed
       register: vprokey_file_out
-  
+      debug:
+        var: vprokey_file_out
+    - name: create security group for vprofile stack
+      ec2_group:
+        name: "{{ vpro_elb_sg }}"
+        description: Allow port 80 and 443 from anywhere
+        region: "{{ region }}"
+        vpc_id: "{{ vpc_id }}"
+        rules:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: 0.0.0.0/0
+      register: vpro_elb_sg_out
+      debug:
+        var: vpro_elb_sg_out
+    - name: create security group for vprofile stack
+      ec2_group:
+        name: "{{ vpro_app_sg }}"
+        description: Allow port 22 from bastion host and allow port 8080
+        region: "{{ region }}"
+        vpc_id: "{{ vpc_id }}"
+        purge_rules: no
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            src_group: "{{ bastion_sg_id }}"
+          - proto: tcp
+            from_port: 8080
+            to_port: 8080
+            group_id: "{{ vpro_elb_sg_out.group_id }}"
+      register: vpro_app_sg_out
+      debug:
+        var: vpro_app_sg_out
+    - name: create security group with in own sg id
+      ec2_group:
+        name: "{{ vpro_back_sg }}"
+        description: Allow port 22 from everywere and all ports from own sg id
+        region: "{{ region }}"
+        vpc_id: "{{ vpc_id }}"
+        purge_rules: no
+        rules:
+          - proto: all 
+            src_group: "{{ vpro_app_sg_out.group_id }}"
+      register: vpro_back_sg_out
+      debug:
+        var: vpro_back_sg_out
+    - name: create Nginx web01
+      ec2:
+        key_name: "{{ key_name }}"
+        instance_type: "{{ instance_type }}"
+        image: "{{ ami_id }}"
+        wait: yes
+        wait_timeout: 300
+        region: "{{ region }}"
+        group_id: "{{ vpro_app_sg_out.group_id }}"
+        vpc_subnet_id: "{{ pubsub1_id }}"
+        count: 1
+        instance_tags:
+          Name: "{{ vpro_elb_name }}-web01"
+          Project: Vprofile
+          Owner: DevOps-Team
+        exact_count: 1
+        count_tag:
+          Name: "web01"
+          Project: Vprofile
+          Owner: DevOps-Team
+      register: web01_out
+      debug:
+        var: web01_out
