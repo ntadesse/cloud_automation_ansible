@@ -82,10 +82,10 @@
         wait_timeout: 300
         region: "{{ region }}"
         group_id: "{{ vpro_app_sg_out.group_id }}"
-        vpc_subnet_id: "{{ pubsub1_id }}"
+        vpc_subnet_id: "{{ privsub1_id }}"
         count: 1
         instance_tags:
-          Name: "{{ vpro_elb_name }}-web01"
+          Name: "web01"
           Project: Vprofile
           Owner: DevOps-Team
         exact_count: 1
@@ -94,5 +94,166 @@
           Project: Vprofile
           Owner: DevOps-Team
       register: web01_out
-      debug:
-        var: web01_out
+    - name: create Tomcat app01
+      ec2:
+        key_name: "{{ key_name }}"
+        instance_type: "{{ instance_type }}"
+        image: "{{ tomcat_ami }}"
+        wait: yes
+        wait_timeout: 300
+        region: "{{ region }}"
+        group_id: "{{ vpro_back_sg_out.group_id }}"
+        vpc_subnet_id: "{{ privsub1_id }}"
+        count: 1
+        instance_tags:
+          Name: "app01"
+          Project: Vprofile
+          Owner: DevOps-Team
+        exact_count: 1
+        count_tag:
+          Name: "app01"
+          Project: Vprofile
+          Owner: DevOps-Team
+      register: app01_out
+    - name: create Memcached mc01
+      ec2:
+        key_name: "{{ key_name }}"
+        instance_type: "{{ instance_type }}"
+        image: "{{ memcache_ami }}"
+        wait: yes
+        wait_timeout: 300
+        region: "{{ region }}"
+        group_id: "{{ vpro_back_sg_out.group_id }}"
+        vpc_subnet_id: "{{ privsub1_id }}"
+        count: 1
+        instance_tags:
+          Name: "mc01"
+          Project: Vprofile
+          Owner: DevOps-Team
+        exact_count: 1
+        count_tag:
+          Name: "mc01"
+          Project: Vprofile
+          Owner: DevOps-Team
+      register: mc01_out
+    - name: create RabbitMQ rmq01
+      ec2:
+        key_name: "{{ key_name }}"
+        instance_type: "{{ instance_type }}"
+        image: "{{ rmq_ami }}"
+        wait: yes
+        wait_timeout: 300
+        region: "{{ region }}"
+        group_id: "{{ vpro_back_sg_out.group_id }}"
+        vpc_subnet_id: "{{ privsub1_id }}"
+        count: 1
+        instance_tags:
+          Name: "rmq01"
+          Project: Vprofile
+          Owner: DevOps-Team
+        exact_count: 1
+        count_tag:
+          Name: "rmq01"
+          Project: Vprofile
+          Owner: DevOps-Team
+      register: rmq01_out
+    - name: create MySQL db01
+      ec2:
+        key_name: "{{ key_name }}"
+        instance_type: "{{ instance_type }}"
+        image: "{{ mysql_ami }}"
+        wait: yes
+        wait_timeout: 300
+        region: "{{ region }}"
+        group_id: "{{ vpro_back_sg_out.group_id }}"
+        vpc_subnet_id: "{{ privsub1_id }}"
+        count: 1
+        instance_tags:
+          Name: "db01"
+          Project: Vprofile
+          Owner: DevOps-Team
+        exact_count: 1
+        count_tag:
+          Name: "db01"
+          Project: Vprofile
+          Owner: DevOps-Team
+      register: db01_out
+    - debug:
+        vars: db01_out.tagged_instances[0].id
+    - local_action:
+        module: ec2_elb_lb
+        name: "vpro_elb"
+        region: "{{ region }}"
+        state: present
+        instance_ids: 
+          - "{{ web01_out.tagged_instances[0].id }}"
+        purge_instances_ids: yes
+        security_group_ids: "{{ vpro_elb_sg_out.group_id }}"
+        subnets:
+          - "{{ pubsub1_id }}"
+          - "{{ pubsub2_id }}"  
+          - "{{ pubsub3_id }}"
+        listeners:
+          - protocol: HTTP # options are HTTP, HTTPS, SSL, TCP, SSL_TCP, udp, UDP_TCP
+            load_balancer_port: 80
+            instance_port: 80
+          - protocol: HTTPS
+            load_balancer_port: 443
+            instance_port: 443
+        resource: "{{ db01_out.tagged_instances[0].id }}"
+        tags:
+          Name: "db01"
+          Project: Vprofile
+          Owner: DevOps-Team
+      register: db01_tag_out
+    - name: Inser/Update Hosts IP and Name in the file provision-stack/group_vars/hosts_ip
+      blockinfile:
+        path: provision-stack/group_vars/hosts_ip
+        block: |
+          web01_ip={{ web01_out.tagged_instances[0].private_ip }}
+          app01_ip={{ app01_out.tagged_instances[0].private_ip }}
+          mc01_ip={{ mc01_out.tagged_instances[0].private_ip }}
+          rmq01_ip={{ rmq01_out.tagged_instances[0].private_ip }}
+          db01_ip={{ db01_out.tagged_instances[0].private_ip }}
+    - name: Copy login key to provision-stack directory
+      copy:
+        src: "{{ key_name }}.pem"
+        dest: provision-stack/group_vars/{{ key_name }}.pem
+        mode: 0400
+      when: vprokey_file_out.changed
+    
+    - name: Insert/Update Invontory file provision-stack/inventory-vpro
+      blockinfile:
+        path: provision-stack/inventory-vpro
+        block: |
+          web01 ansible_host={{web01_out.tagged_instances[0].private_ip}}
+          app01 ansible_host={{app01_out.tagged_instances[0].private_ip}}
+          mc01 ansible_host={{mc01_out.tagged_instances[0].private_ip}}
+          rmq01 ansible_host={{rmq01_out.tagged_instances[0].private_ip}}
+          db01 ansible_host={{db01_out.tagged_instances[0].private_ip}}
+          cntl ansible_host=127.0.0.1 ansible_connection=local
+          
+          [webservgrp]
+          web01
+          [appservgrp]
+          app01
+          [dbservgrp]
+          db01
+          [mcservgrp]
+          mc01
+          [rmqservgrp]
+          rmq01
+          [control]
+          cntl
+
+          [stack_inst:children]
+          webservgrp
+          appservgrp
+          dbservgrp
+          mcservgrp
+          rmqservgrp
+
+          [stack_inst:vars]
+          ansible_user: ubuntu
+          ansible_ssh_private_key_file: "{{ key_name }}.pem"
+          #ansible_python_interpreter: /usr/bin/python3

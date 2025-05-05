@@ -192,6 +192,7 @@
     - name: save VPC variables to file
       copy:
         content: |
+          region: "{{ region }}"
           vpc_id: "{{ vpc_id }}"
           pubsub1_id: "{{ pubsub1_id }}"
           pubsub2_id: "{{ pubsub2_id }}"
