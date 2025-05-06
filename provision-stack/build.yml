@@ -1,0 +1,37 @@
+- name: Generate artifact, copy artifact & sql file to files directory
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: install jdk, maven, provision-stack/group_vars/hosts_ip
+      apt: 
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop: 
+        - openjdk-17-jre
+        - maven
+        - git
+    - name: clone source code from git repo
+      git:
+        repo: "{{ git_repo }}"
+        dest: ./Vprofile-repo
+        version: vp-rem
+      register: git_out
+    - name: mvn install command to build artifact
+      command: "mvn install"
+      args:
+        chdir: Vprofile-repo
+      when: git_out.changed
+      register: mvn_out
+    - name: copy artifact to files directory
+      copy:
+        src: "{{ item }}"
+        dest: ./files/ROOT.war
+      with_fileglob: Vprofile-repo/target/*.war
+      when: mvn_out.changed
+    - name: copy sql file to files directory
+      copy:
+        src: Vprofile-repo/src/main/resources/db_backup.sql
+        dest: ./files/db_backup.sql
