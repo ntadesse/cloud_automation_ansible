@@ -5,7 +5,7 @@
 - name: setup dbserver
   import_playbook: db.yml
 - name: Deploy SQL file to DB server
-  import_playbook: deploy_sql.yml
+  import_playbook: dbdeploy_sql.yml
 - name: Setup Memcached server
   import_playbook: memcached.yml
 - name: Setup RabbitMQ server
